@@ -1,0 +1,10 @@
+namespace: cainam          # usually your GitHub org/user
+name: ansible_helper_playbooks
+version: 1.0.0             # starting version
+readme: README.md
+authors:
+  - Your Name <you@example.com>
+description: "Helper playbooks and roles for my infrastructure"
+license: MIT
+dependencies: {}           # optional collection dependencies
+
