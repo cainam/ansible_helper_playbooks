@@ -1,0 +1,35 @@
+- name: compare rendered files to expected output
+  hosts: all
+  gather_facts: true
+  tasks:
+  - block:
+    - name: read rendered file
+      ansible.builtin.slurp:
+        src: "{{ item.0.destination_dir if item.0.destination_dir is defined else temp_dir }}/{{ item.1 }}"
+      register: r_slurp
+      loop: "{{ test_vars | subelements('compares') }}"
+
+    - name: set expected_result
+      vars:
+        expected: "Application: {{ item.0.app_name }}\nEnvironment: test\n\n"
+      set_fact:
+        test_data: "{{ test_data|default([]) + [expected] }}"
+      loop: "{{ test_vars | subelements('compares') }}"
+      #loop: "{{ compares }}"
+
+    - name: dbg
+      debug:
+        msg: "r_slurp: {{ r_slurp.results | to_nice_yaml }}\nexpected:{{ test_data[idx] }}"
+      loop: "{{ test_vars | subelements('compares') }}"
+      loop_control:
+        index_var: idx
+
+    - name: Compare contents
+      ansible.builtin.assert:
+        that:
+          - (r_slurp.results | selectattr('item', 'equalto', item) | first).content ==  (test_data[idx] | b64encode)
+      loop: "{{ test_vars | subelements('compares') }}"
+      loop_control:
+        index_var: idx
+      #loop: "{{ compares }}"
+

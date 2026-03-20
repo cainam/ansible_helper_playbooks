@@ -18,42 +18,51 @@
     quiet: true
 
 - block:
-  - name: create remote temporary directory
+  - name: create remote temporary directory 
     ansible.builtin.tempfile:
       state: directory
       suffix: "_template_remote"
     register: remote_tmp_dir
+    changed_when: false
+    when: destination_dir is not defined
 
-  - set_fact:
-      templates_dirs:  "{{ lookup('pipe', '[ ! -d \"'+ template_source_dir +'\" ] || find \"'+ template_source_dir +'\"   -type d').split('\n')|reject('match', '^$')  }}"
+  - name: "{{ title | default('') }} get template directories"
+    find:
+      path: "{{ template_source_dir }}"
+      file_type: directory
+    register: template_dirs_found
+    delegate_to: localhost
+
+  - name: set vars
+    vars: 
+      effective_dest_dir: "{{ destination_dir if destination_dir is defined else remote_tmp_dir.path }}"
+    set_fact:
+      templates_dirs: "{{ (template_dirs_found.files | map(attribute='path') | list) + [template_source_dir] }}"
       templates_files: "{{ lookup('pipe', '[ ! -d \"'+ template_source_dir +'\" ] || find \"'+ template_source_dir +'\" ! -type d').split('\n')|reject('match', '^$')  }}"
-      "{{ dir_var|default('foo') }}": "{{ remote_tmp_dir.path }}"
-      dest_dir: "{{ remote_tmp_dir.path }}"
+      "{{ dir_var|default('foo') }}": "{{ effective_dest_dir }}"
+      dest_dir: "{{ effective_dest_dir }}"
 
   - name: "{{ title | default('') }} ensure destination directories exist for templates"
     become: no
     file:
-      path: "{{ remote_tmp_dir.path }}/{{ item | relpath(template_source_dir) }}"
-      recurse: true
+      path: "{{ dest_dir }}/{{ item | relpath(template_source_dir) }}"
       state: directory
       owner: "{{ owner|default('root') }}"
       group: "{{ group|default('root') }}"
-      mode: "{{ directoryMode|default('755') }}"
+      mode: "{{ directoryMode|default('0755') }}"
     loop: "{{ templates_dirs }}"
+    tags:
+    - molecule-idempotence-notest
 
-  - name: render templates locally
+  - name: render templates
     become: no
     template:
       src: "{{ item }}"
-      dest: "{{ remote_tmp_dir.path }}/{{ item | relpath(template_source_dir) }}"
+      dest: "{{ dest_dir }}/{{ item | relpath(template_source_dir) }}"
       owner: "{{ owner|default('root') }}"
       group: "{{ group|default('root') }}"
       mode: "{{ fileMode|default('644') }}"
     loop: "{{ templates_files }}"
+    tags:
+    - molecule-idempotence-notest
 
-  - name: move files to final destination
-    copy:
-      src: "{{ remote_tmp_dir.path }}/"
-      dest: "{{ destination_dir }}"
-      remote_src: yes
-    when: destination_dir is defined

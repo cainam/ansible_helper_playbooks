@@ -1,0 +1,22 @@
+---
+scenario:
+  name: test_directory_sync
+  converge_sequence:
+    - converge
+
+provisioner:
+  playbooks:
+    converge: converge.yml
+  inventory:
+    group_vars:
+      all:
+        test_vars:
+        - destination_dir: "/tmp/deploy_test"
+          app_name: "test1"
+          compares:
+          - config.conf
+        - dir_var: tellMe
+          app_name: "test2"
+          compares:
+          - config.conf
+

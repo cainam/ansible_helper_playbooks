@@ -1,0 +1,8 @@
+---
+- name: Cleanup
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: No-op cleanup
+      debug:
+        msg: "No cleanup required for this scenario."

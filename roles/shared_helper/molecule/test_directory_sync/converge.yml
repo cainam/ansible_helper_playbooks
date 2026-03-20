@@ -1,0 +1,24 @@
+- hosts: all
+  gather_facts: true
+  tasks:
+    - name: Run template_directory task
+      import_tasks: ../../tasks/template_directory.yaml
+      vars:
+        template_source_dir: "../sample_data/templates"
+        destination_dir: "{{ test_vars[0].destination_dir }}" #"/tmp/deploy_test"
+        app_name: "{{ test_vars[0].app_name }}"
+
+    - name: Run template_directory task
+      import_tasks: ../../tasks/template_directory.yaml
+      vars:
+        template_source_dir: "../sample_data/templates"
+        dir_var: "{{ test_vars[1].dir_var }}"
+        app_name: "{{ test_vars[1].app_name }}"
+
+    - set_fact:
+        temp_dir: "{{ lookup('vars', test_vars[1].dir_var ) }}"
+        cacheable: yes
+      when: temp_dir is not defined # set only on first execution
+
+    - debug:
+        msg: "{{ test_vars[1].dir_var }}: {{ lookup('vars', test_vars[1].dir_var) }}"
