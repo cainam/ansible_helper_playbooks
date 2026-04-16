@@ -24,7 +24,7 @@
       suffix: "_template_remote"
     register: remote_tmp_dir
     changed_when: false
-    when: destination_dir is not defined
+    when: dir_var is defined
 
   - name: "{{ title | default('') }} get template directories"
     find:
@@ -35,6 +35,7 @@
 
   - name: set vars
     vars: 
+      #effective_dest_dir: "{{ remote_tmp_dir.path if dir_var is defined else destination_dir }}"
       effective_dest_dir: "{{ destination_dir if destination_dir is defined else remote_tmp_dir.path }}"
     set_fact:
       templates_dirs: "{{ (template_dirs_found.files | map(attribute='path') | list) + [template_source_dir] }}"
