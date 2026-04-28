@@ -3,11 +3,13 @@
   gather_facts: true
   tasks:
   - block:
-    - name: read rendered file
+    - name: "read rendered file"
       ansible.builtin.slurp:
         src: "{{ item.0.destination_dir if item.0.destination_dir is defined else temp_dir }}/{{ item.1 }}"
       register: r_slurp
       loop: "{{ test_vars | subelements('compares') }}"
+      loop_control:
+        label: "read rendered file"
 
     - name: set expected_result
       vars:
