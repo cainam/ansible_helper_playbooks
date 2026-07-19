@@ -8,7 +8,7 @@
     that:
     - cert_name is defined
     - cert_ca_common_name is defined
-    - cert_path is defined
+    - cert_local_path is defined
     - cert_dest_dir is defined
     quiet: true
   
@@ -20,11 +20,11 @@
 
 - name: put certificate keys in place
   copy:
-    src: "{{ cert_path }}/{{ cert_ca_common_name }}/subject_keys/{{ cert_name }}.pem"
+    src: "{{ cert_local_path }}/{{ cert_ca_common_name }}/subject_keys/{{ cert_name }}.pem"
     dest: "{{ cert_dest_dir }}/{{ cert_name }}.key"
 
 - name: put certificates in place
   copy:
-    src: "{{ cert_path }}/{{ my_certs.conf.ca_common_name }}/certs/{{ cert_name }}.crt"
+    src: "{{ cert_local_path }}/{{ my_certs.conf.ca_common_name }}/certs/{{ cert_name }}.crt"
     dest: "{{ cert_dest_dir }}/{{ cert_name }}.crt"
 
